@@ -5,6 +5,8 @@ A minimalist, robust tutoring system designed for high-speed active recall of RI
 ### Description
 `rvtutor` is a command-line interface (CLI) application that helps students quiz themselves on how to manually encode RISC-V instructions. It provides an interactive, fast-paced environment to practice identifying instruction fields, bit-widths, and full 32-bit hex encoding, as this is what will be tested.
 
+I produced this project because we have to recall this information in one of our courses and I needed an efficient way to learn this as quickly as possible. This is shared with classmates to help us all out.
+
 ### Motivation
 - **Active Recall Integrity**: The system focuses on full active recall. It clears the screen between questions and enforces precise inputs, preventing visual hints from previous answers.
 - **Speed & Efficiency**: Faster than traditional flashcards or manual pen-and-paper methods. By automating the validation and providing instant feedback, users can loop through dozens of instructions in minutes.
