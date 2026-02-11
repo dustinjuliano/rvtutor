@@ -72,6 +72,15 @@ Hex (q to quit): 402081B3
 Correct! (1/1)
 ```
 
+## Pedagogy Methodology
+The tool employs a **scaffolded learning approach** combined with **active recall**:
+
+1.  **Isolation of Variables**: By separating "Recall" (fields), "Bits" (widths), and "Encoding" (values), users master each component of an instruction separately before having to combine them.
+2.  **Immediate Feedback Loops**: Mistakes are caught instantly at the granular level (e.g., getting just the opcode wrong), allowing for rapid correction of mental models.
+3.  **Cognitive Load Management**: 
+    - Random immediate values are restricted to **double digits (e.g., -99 to 99)**. This mimics the "small constants" optimization often found in real code but, more importantly, reduces the mental arithmetic burden so students can focus on the *encoding structure* rather than performing complex binary arithmetic in their heads.
+4.  **Interleaving**: The default mode mixes different instruction types (R, I, S, etc.), preventing rote memorization of a single pattern and forcing users to discriminate between formats actively.
+
 ## Grading Methodology
 The system uses a **point-per-item** partial grading system across all modes to provide granular feedback.
 

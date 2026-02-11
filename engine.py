@@ -47,11 +47,11 @@ class QuizEngine:
         }
         
         # Immediate range handling
-        if ins.type == 'I': q["imm"] = random.randint(-2048, 2047)
-        elif ins.type == 'S': q["imm"] = random.randint(-2048, 2047)
-        elif ins.type == 'B': q["imm"] = random.choice(range(-4096, 4096, 2))
-        elif ins.type == 'U': q["imm"] = random.randint(0, 0xFFFFF)
-        elif ins.type == 'J': q["imm"] = random.choice(range(-1048576, 1048576, 2))
+        if ins.type == 'I': q["imm"] = random.randint(-99, 99)
+        elif ins.type == 'S': q["imm"] = random.randint(-99, 99)
+        elif ins.type == 'B': q["imm"] = random.choice(range(-98, 98, 2))
+        elif ins.type == 'U': q["imm"] = random.randint(0, 99)
+        elif ins.type == 'J': q["imm"] = random.choice(range(-98, 98, 2))
         
         self.current_q = q
         q["asm"] = self.format_asm(q)
