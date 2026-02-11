@@ -27,7 +27,7 @@ The tutor supports six RISC-V instruction types: **R, I, S, B, U, J**.
 - **Visual Clarity**: Screen clears before every question to maintain "recall integrity".
 
 ### Example Sessions
-#### 1. Recall Mode (Partial Correctness)
+#### 1. Recall Mode (Demo of Partial Grading)
 ```text
 Mode: Recall (Active Types: R, I)
 --------------------
@@ -50,7 +50,7 @@ Correct. (5/5)
 Accuracy: 10/11 (90%)
 ```
 
-#### 3. Encoding Mode (Assembly-Driven Cleanup)
+#### 3. Encoding Mode
 ```text
 Mode: Encoding (Instruction: SUB)
 Assembly: SUB x3, x1, x2
@@ -127,4 +127,4 @@ python3 -m unittest discover tests
 The project includes a comprehensive test suite with **58 tests** covering 100% of the core engine logic, instruction variations, and user interface workflows. This ensures reliable grading, accurate assembly formatting, and robust error handling across all modes.
 
 ## AI Disclosure
-100% of the code in this repository was written using **Google Antigravity** and Gemini 3. However, the program design, feature requirements, and iterative refinements were made manually through numerous rounds of feedback.
+100% of the code in this repository was written using **Google Antigravity** and Gemini 3. However, the program design, feature requirements, and iterative refinements were made manually through quite a substantial number of rounds of my own feedback.
