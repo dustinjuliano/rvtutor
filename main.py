@@ -61,16 +61,18 @@ def main():
 
             mode = mode_choice
             
-            # Display mode header once when entering the quiz loop
-            clear_screen()
-            print(f"Mode: {['Recall', 'Bits', 'Encoding'][int(mode)-1]} (Active Types: {', '.join(active_types)})")
-            print("-" * 20)
-            print("Type 'q' to return to the mode menu.\n")
+            # Mode header will be printed inside the loop
+            mode_header = f"Mode: {['Recall', 'Bits', 'Encoding'][int(mode)-1]} (Active Types: {', '.join(active_types)})"
 
             while True: # 3. Quiz Inner Loop
                 try:
                     q = engine.generate_question()
                     ins = q["instruction"]
+                    
+                    clear_screen()
+                    print(mode_header)
+                    print("-" * 20)
+                    print("Type 'q' to return to the mode menu.\n")
                     
                     if mode == "1": # Recall
                         print(f"Instruction: {ins.name.upper()} ({ins.type}-Type)")
@@ -143,13 +145,17 @@ def run_encoding_pipeline(engine, q):
     ins = q["instruction"]
     truth = engine.get_ground_truth()
     
-    print(f"Encode: {ins.name.upper()}")
+    def display_context():
+        clear_screen()
+        print(f"Mode: Encoding (Instruction: {ins.name.upper()} - {ins.type}-Type)")
+        print("-" * 20)
     
     def check_exit(text):
         return text.lower() in ['q', 'quit']
 
     # Step 1: Type
     while True:
+        display_context()
         raw = input("1. Identify Type (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
@@ -162,10 +168,15 @@ def run_encoding_pipeline(engine, q):
 
     # Step 2: Fields
     while True:
+        display_context()
         raw = input("2. Enter Field Names (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
         ans = raw.split()
+        ok, mask, correct = engine.validate_layout(ans)
+        points = sum(mask)
+        total = len(correct)
+        engine.record_stats(points, total)
         ok, mask, correct = engine.validate_layout(ans)
         points = sum(mask)
         total = len(correct)
@@ -176,8 +187,9 @@ def run_encoding_pipeline(engine, q):
         print(f"Incorrect. Expected: {' '.join(correct)}")
 
     # Step 3: Binary per field
-    print(f"Values: rs1={q['rs1']}, rs2={q['rs2']}, rd={q['rd']}, imm={q['imm']}")
     while True:
+        display_context()
+        print(f"Values: rs1={q['rs1']}, rs2={q['rs2']}, rd={q['rd']}, imm={q['imm']}")
         raw = input("3. Binary for each field (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
@@ -200,6 +212,7 @@ def run_encoding_pipeline(engine, q):
 
     # Step 4: Final Hex
     while True:
+        display_context()
         raw = input("4. Full Hex (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
