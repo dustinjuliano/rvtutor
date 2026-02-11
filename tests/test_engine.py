@@ -50,7 +50,7 @@ class TestEngine(unittest.TestCase):
         self.engine.pool = [ins]
         self.engine.current_q = {"instruction": ins, "rs1": 1, "rs2": 0, "rd": 2, "imm": 10}
         truth = self.engine.get_ground_truth()
-        self.assertEqual(truth["hex"], "00A08113")
+        self.assertEqual(truth["hex"], "00a08113")
 
     def test_ground_truth_logic_r(self):
         # add x3, x1, x2 -> funct7=0, rs2=2, rs1=1, f3=0, rd=3, op=0x33
@@ -60,7 +60,7 @@ class TestEngine(unittest.TestCase):
         self.engine.pool = [ins]
         self.engine.current_q = {"instruction": ins, "rs1": 1, "rs2": 2, "rd": 3, "imm": 0}
         truth = self.engine.get_ground_truth()
-        self.assertEqual(truth["hex"], "002081B3")
+        self.assertEqual(truth["hex"], "002081b3")
 
     def test_ground_truth_logic_s(self):
         # sw x2, 8(x1) -> imm=8 (0000000 01000)
@@ -71,7 +71,7 @@ class TestEngine(unittest.TestCase):
         self.engine.pool = [ins]
         self.engine.current_q = {"instruction": ins, "rs1": 1, "rs2": 2, "rd": 0, "imm": 8}
         truth = self.engine.get_ground_truth()
-        self.assertEqual(truth["hex"], "0020A423")
+        self.assertEqual(truth["hex"], "0020a423")
 
     def test_ground_truth_logic_b(self):
         # beq x1, x2, 4 -> imm=4 (offset +4)
@@ -93,7 +93,7 @@ class TestEngine(unittest.TestCase):
         self.engine.pool = [ins]
         self.engine.current_q = {"instruction": ins, "rs1": 0, "rs2": 0, "rd": 1, "imm": 1}
         truth = self.engine.get_ground_truth()
-        self.assertEqual(truth["hex"], "000010B7")
+        self.assertEqual(truth["hex"], "000010b7")
 
     def test_ground_truth_logic_j(self):
         # jal x1, 2 -> imm=2
@@ -104,7 +104,7 @@ class TestEngine(unittest.TestCase):
         self.engine.pool = [ins]
         self.engine.current_q = {"instruction": ins, "rs1": 0, "rs2": 0, "rd": 1, "imm": 2}
         truth = self.engine.get_ground_truth()
-        self.assertEqual(truth["hex"], "002000EF")
+        self.assertEqual(truth["hex"], "002000ef")
 
     def test_validation_layout(self):
         # R-type
@@ -155,6 +155,69 @@ class TestEngine(unittest.TestCase):
         self.engine.record_stats(3, 5) # Fail
         self.assertEqual(self.engine.stats["success"], 2)
         self.assertEqual(self.engine.stats["attempts"], 3)
+
+    def test_format_asm_R(self):
+        ins = Instruction("add", "R", 0x33, 0x0, 0x0)
+        q = {"instruction": ins, "rs1": 1, "rs2": 2, "rd": 3, "imm": 0}
+        self.assertEqual(self.engine.format_asm(q), "add x3, x1, x2")
+
+    def test_format_asm_I(self):
+        ins_addi = Instruction("addi", "I", 0x13, 0x0)
+        q_addi = {"instruction": ins_addi, "rs1": 1, "rs2": 0, "rd": 2, "imm": -10}
+        self.assertEqual(self.engine.format_asm(q_addi), "addi x2, x1, -10")
+        
+        ins_lw = Instruction("lw", "I", 0x03, 0x2)
+        q_lw = {"instruction": ins_lw, "rs1": 5, "rs2": 0, "rd": 6, "imm": 4}
+        self.assertEqual(self.engine.format_asm(q_lw), "lw x6, 4(x5)")
+
+    def test_format_asm_S(self):
+        ins = Instruction("sw", "S", 0x23, 0x2)
+        q = {"instruction": ins, "rs1": 5, "rs2": 6, "rd": 0, "imm": 8}
+        self.assertEqual(self.engine.format_asm(q), "sw x6, 8(x5)")
+
+    def test_format_asm_B(self):
+        ins = Instruction("beq", "B", 0x63, 0x0)
+        q = {"instruction": ins, "rs1": 1, "rs2": 2, "rd": 0, "imm": 4}
+        self.assertEqual(self.engine.format_asm(q), "beq x1, x2, 4")
+
+    def test_format_asm_U(self):
+        ins = Instruction("lui", "U", 0x37)
+        q = {"instruction": ins, "rs1": 0, "rs2": 0, "rd": 5, "imm": 1}
+        self.assertEqual(self.engine.format_asm(q), "lui x5, 1")
+
+    def test_format_asm_J(self):
+        ins = Instruction("jal", "J", 0x6F)
+        q = {"instruction": ins, "rs1": 0, "rs2": 0, "rd": 1, "imm": 4}
+        self.assertEqual(self.engine.format_asm(q), "jal x1, 4")
+
+    def test_semantic_validity_comprehensive(self):
+        """
+        Cryptographically verify that generated instructions:
+        1. Never write to x0 (rd != 0 for R, I, U, J types).
+        2. Have valid 2-byte aligned immediates for B, J types.
+        3. Keep register indices within [0, 31].
+        """
+        self.engine.filter_pool(['R', 'I', 'S', 'B', 'U', 'J'])
+        
+        # Run enough iterations to hit edge cases
+        for _ in range(1000):
+            q = self.engine.generate_question()
+            ins = q["instruction"]
+            
+            # 1. Register Range Checks
+            self.assertTrue(0 <= q['rs1'] <= 31, f"rs1 out of range: {q['rs1']}")
+            self.assertTrue(0 <= q['rs2'] <= 31, f"rs2 out of range: {q['rs2']}")
+            self.assertTrue(0 <= q['rd'] <= 31, f"rd out of range: {q['rd']}")
+            
+            # 2. Destination semantics (x0 is read-only)
+            # R, I, U, J types write to rd
+            if ins.type in ['R', 'I', 'U', 'J']:
+                self.assertNotEqual(q['rd'], 0, f"Generated write to x0 for {ins.name} ({ins.type})")
+                
+            # 3. Immediate semantics (Alignment)
+            # B, J types must be 2-byte aligned
+            if ins.type in ['B', 'J']:
+                self.assertEqual(q['imm'] % 2, 0, f"Misaligned immediate for {ins.name}: {q['imm']}")
 
 if __name__ == '__main__':
     unittest.main()

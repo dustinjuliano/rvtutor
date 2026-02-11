@@ -42,7 +42,7 @@ class QuizEngine:
             "instruction": ins,
             "rs1": random.randint(0, 31),
             "rs2": random.randint(0, 31),
-            "rd": random.randint(0, 31),
+            "rd": random.randint(1, 31), # Enforce semantic validity: rd != x0
             "imm": 0
         }
         
@@ -54,7 +54,30 @@ class QuizEngine:
         elif ins.type == 'J': q["imm"] = random.choice(range(-1048576, 1048576, 2))
         
         self.current_q = q
+        q["asm"] = self.format_asm(q)
         return q
+
+    def format_asm(self, q: Dict) -> str:
+        """Generates a standard assembly string for the given question."""
+        ins = q["instruction"]
+        name = ins.name.lower()
+        rd, rs1, rs2, imm = q["rd"], q["rs1"], q["rs2"], q["imm"]
+        
+        if ins.type == 'R':
+            return f"{name} x{rd}, x{rs1}, x{rs2}"
+        elif ins.type == 'I':
+            if name == 'lw':
+                return f"{name} x{rd}, {imm}(x{rs1})"
+            return f"{name} x{rd}, x{rs1}, {imm}"
+        elif ins.type == 'S':
+            return f"{name} x{rs2}, {imm}(x{rs1})"
+        elif ins.type == 'B':
+            return f"{name} x{rs1}, x{rs2}, {imm}"
+        elif ins.type == 'U':
+            return f"{name} x{rd}, {imm}"
+        elif ins.type == 'J':
+            return f"{name} x{rd}, {imm}"
+        return f"{name} ???"
 
     def get_ground_truth(self) -> Dict:
         """Generates the 32-bit binary structure for the current question."""

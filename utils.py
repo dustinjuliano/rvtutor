@@ -25,7 +25,7 @@ def to_hex(val: int) -> str:
     # RISC-V 32-bit hex usually
     mask = 0xFFFFFFFF
     sanitized_val = val & mask
-    return format(sanitized_val, '08X')
+    return format(sanitized_val, '08x')
 
 def sign_extend(val: int, bits: int) -> int:
     """Sign-extends a value from a given bit-width to 32-bit integer."""

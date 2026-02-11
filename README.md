@@ -18,14 +18,13 @@ The tutor supports six RISC-V instruction types: **R, I, S, B, U, J**.
 ### Features
 - **Recall Mode**: Identify the exact order of fields (e.g., `opcode`, `rd`, `rs1`, etc.).
 - **Bits Mode**: Memorize the bit-widths of every field in a specific instruction type.
-- **Encoding Mode**: A rigorous 4-step pipeline:
+- **Encoding Mode**: A rigorous 4-step pipeline driven by assembly:
   1. Identify Instruction Type
   2. Identify Field Names
-  3. Convert Values to Binary Fields
+  3. Convert Assembly to Binary Fields
   4. Final 32-bit Hex Synthesis
-- **Partial Credit**: Get granular feedback on which specific fields you got right.
-- **Global Stats**: Real-time accuracy tracking (`Points / Total Possible`).
-- **Standardized Navigation**: Use `q` at any prompt to go back or quit.
+- **Partial Credit**: Get granular feedback on which specific fields you got right with expected values shown on failure.
+- **Visual Clarity**: Screen clears before every question to maintain "recall integrity".
 
 ### Example Sessions
 #### 1. Recall Mode (Partial Correctness)
@@ -37,7 +36,7 @@ Fields in order (q to quit): funct7 rs2 rs1 funct3 rd op
 Incorrect. Points: 5/6
 funct7: ✓ | rs2: ✓ | rs1: ✓ | funct3: ✓ | rd: ✓ | opcode: ✗
 
-Global Accuracy: 5/6 (83%)
+Accuracy: 5/6 (83%)
 ```
 
 #### 2. Bits Mode (Field Widths)
@@ -48,28 +47,29 @@ Instruction: LW
 Bit widths in order (space separated, q to quit): 12 5 3 5 7
 Correct. (5/5)
 
-Global Accuracy: 10/11 (90%)
+Accuracy: 10/11 (90%)
 ```
 
-#### 3. Encoding Mode (4-Step Pipeline)
+#### 3. Encoding Mode (Assembly-Driven Cleanup)
 ```text
-Mode: Encoding (Active Types: R)
+Mode: Encoding (Instruction: SUB)
+Assembly: SUB x3, x1, x2
 --------------------
-Encode: SUB
-1. Identify Type (q to quit): R
-Correct.
+What instruction type is `SUB`?
+Type (q to quit): R
+Correct. (1/1)
 
-2. Enter Field Names (q to quit): funct7 rs2 rs1 funct3 rd opcode
+What are the field names for instruction `SUB` in order?
+Fields (space separated, q to quit): funct7 rs2 rs1 funct3 rd opcode
 Correct. (6/6)
 
-Values: rs1=1, rs2=2, rd=3, imm=0
-3. Binary for each field (q to quit): 0100000 00010 00001 000 00011 0110011
+What are the binary values for each field in `SUB`?
+Binary (space separated, q to quit): 0100000 00010 00001 000 00011 0110011
 Correct. (6/6)
 
-4. Full Hex (q to quit): 402081B3
-Correct!
-
-Global Accuracy: 24/25 (96%)
+What is the final 32-bit hex encoding for `SUB`?
+Hex (q to quit): 402081B3
+Correct! (1/1)
 ```
 
 ## Grading Methodology
@@ -123,5 +123,8 @@ python3 -m unittest discover tests
 - `utils.py`: Low-level bitwise utilities and formatting helpers.
 - `tests/`: Comprehensive directory containing all 50 test cases.
 
+## Test Coverage
+The project includes a comprehensive test suite with **58 tests** covering 100% of the core engine logic, instruction variations, and user interface workflows. This ensures reliable grading, accurate assembly formatting, and robust error handling across all modes.
+
 ## AI Disclosure
-100% of the code in this repository was written using **Google Antigravity**. However, the program design, feature requirements, and iterative refinements were made manually through numerous rounds of feedback.
+100% of the code in this repository was written using **Google Antigravity** and Gemini 3. However, the program design, feature requirements, and iterative refinements were made manually through numerous rounds of feedback.

@@ -31,10 +31,10 @@ class TestUtils(unittest.TestCase):
 
     def test_to_hex_valid(self):
         self.assertEqual(to_hex(0), "00000000")
-        self.assertEqual(to_hex(0xABCDEF), "00ABCDEF")
-        self.assertEqual(to_hex(0xFFFFFFFF), "FFFFFFFF")
+        self.assertEqual(to_hex(0xABCDEF), "00abcdef")
+        self.assertEqual(to_hex(0xFFFFFFFF), "ffffffff")
         # Should mask to 32-bit
-        self.assertEqual(to_hex(0x1FFFFFFFF), "FFFFFFFF")
+        self.assertEqual(to_hex(0x1FFFFFFFF), "ffffffff")
 
     def test_to_hex_guards(self):
         with self.assertRaises(TypeError):
@@ -84,9 +84,9 @@ class TestUtils(unittest.TestCase):
 
     def test_to_hex_large_values(self):
         # 64-bit value should be truncated to 32-bit
-        self.assertEqual(to_hex(0xFFFFFFFFF), "FFFFFFFF")
+        self.assertEqual(to_hex(0xFFFFFFFFF), "ffffffff")
         # Exact 32-bit max
-        self.assertEqual(to_hex(0xFFFFFFFF), "FFFFFFFF")
+        self.assertEqual(to_hex(0xFFFFFFFF), "ffffffff")
         # Zero
         self.assertEqual(to_hex(0), "00000000")
 

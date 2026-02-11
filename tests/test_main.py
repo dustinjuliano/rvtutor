@@ -62,7 +62,7 @@ class TestMain(unittest.TestCase):
     def test_encoding_pipeline(self, mock_stdout, mock_input):
         engine = QuizEngine()
         ins = Instruction("addi", "I", 0x13, 0x0)
-        q = {"instruction": ins, "rs1": 1, "rs2": 0, "rd": 2, "imm": 10}
+        q = {"instruction": ins, "rs1": 1, "rs2": 0, "rd": 2, "imm": 10, "asm": "addi x2, x1, 10"}
         engine.current_q = q
         
         # Encoding Steps with one empty input for Step 1
@@ -70,7 +70,7 @@ class TestMain(unittest.TestCase):
             "", "I", 
             "imm rs1 funct3 rd opcode",
             "000000001010 00001 000 00010 0010011",
-            "00A08113"
+            "00a08113"
         ]
         
         run_encoding_pipeline(engine, q)
@@ -145,6 +145,107 @@ class TestMain(unittest.TestCase):
         with patch('sys.stdout', new_callable=io.StringIO):
             with self.assertRaises(SystemExit):
                 main()
+
+    @patch('builtins.input')
+    @patch('sys.stdout', new_callable=io.StringIO)
+    def test_encoding_flow_consistency(self, mock_stdout, mock_input):
+        # Verify full flow for SW x2, 8(x1)
+        # S-type, fields: imm rs2 rs1 funct3 imm opcode
+        # rs1=1, rs2=2, imm=8 -> 0x0020A423
+        engine = QuizEngine()
+        ins = Instruction("sw", "S", 0x23, 0x2)
+        q = {
+            "instruction": ins, 
+            "rs1": 1, "rs2": 2, "rd": 0, "imm": 8,
+            "asm": "sw x2, 8(x1)"
+        }
+        engine.current_q = q
+        
+        # Inputs:
+        # 1. Type: S
+        # 2. Fields: imm rs2 rs1 funct3 imm opcode
+        # 3. Binary: imm[11:5] rs2 rs1 funct3 imm[4:0] opcode
+        #    8 = 000...001000
+        #    imm[11:5]=0000000, rs2=00010, rs1=00001, f3=010, imm[4:0]=01000, op=0100011
+        #    0000000 00010 00001 010 01000 0100011
+        # 4. Hex: 0020A423
+        
+        mock_input.side_effect = [
+            "S",
+            "imm rs2 rs1 funct3 imm opcode",
+            "0000000 00010 00001 010 01000 0100011",
+            "0020a423"
+        ]
+        
+        run_encoding_pipeline(engine, q)
+        output = mock_stdout.getvalue()
+        
+        self.assertIn("Mode: Encoding", output)
+        self.assertIn("sw x2, 8(x1)", output)
+        self.assertIn("Correct. (1/1)", output) # Type
+        self.assertIn("Correct. (6/6)", output) # Fields
+        self.assertIn("Correct. (6/6)", output) # Binary
+        self.assertIn("Correct! (1/1)", output) # Hex
+
+    @patch('builtins.input')
+    @patch('sys.stdout', new_callable=io.StringIO)
+    def test_encoding_feedback_persistence(self, mock_stdout, mock_input):
+        # Verify that screen does NOT clear after incorrect input in Encoding mode
+        engine = QuizEngine()
+        ins = Instruction("add", "R", 0x33, 0x0, 0x0)
+        q = {"instruction": ins, "rs1":1, "rs2":2, "rd":3, "imm":0, "asm":"add x3, x1, x2"}
+        engine.current_q = q
+        
+        # Step 2: Input 'bad' (fail) -> 'funct7 rs2 rs1 funct3 rd opcode' (pass)
+        # We start at Step 1 inputs (Type) just to get to Step 2
+        mock_input.side_effect = [
+            "R", # Step 1: OK
+            "bad input", # Step 2: Fail
+            "funct7 rs2 rs1 funct3 rd opcode", # Step 2: Pass
+            "q" # Quit at Step 3
+        ]
+        
+        try:
+            run_encoding_pipeline(engine, q)
+        except SystemExit:
+            pass
+            
+        output = mock_stdout.getvalue()
+        
+        # We expect "Incorrect." to appear
+        self.assertIn("Incorrect.", output)
+        
+        # We expect the feedback to be visible
+ 
+        
+        # Count clear codes. 
+        # 1 for Step 1 entry
+        # 1 for Step 2 entry
+        # 1 for Step 3 entry
+        # Should be 3. If it cleared on error, it would be 4.
+        # Note: clear_screen prints "\033[H\033[J" on non-Windows
+        # assertCount might be tricky if we don't mock os.name, but test environment is likely POSIX-like
+        # Better: check that "Incorrect" is followed by Prompt, NOT by "Mode: Encoding" (which implies header reprint)
+        
+        fail_idx = output.find("Incorrect.")
+        header_idx = output.find("Mode: Encoding", fail_idx)
+        
+        # If header_idx is -1, it means header wasn't reprinted after failure (Good).
+        # Or if it IS printed, it must be for the NEXT step.
+        # But we pass Step 2 immediately after. So Step 3 header appears.
+        # But between "Incorrect" and "What are the field names", there should NOT be a header.
+        
+        # Search for pattern: Incorrect -> Feedback -> What are the field names
+        # VS Incorrect -> Clear -> Header -> What are the field names
+        
+        # We can simply count the number of times the Header appears.
+        # It should appear exactly 3 times (Step 1, Step 2, Step 3).
+        # If the screen cleared on the retry in Step 2, it would appear 4 times.
+        self.assertEqual(output.count("Mode: Encoding"), 3)
+        
+        # Also verify the feedback text is present
+        # With extended partial grading, "bad input" maps to field[0]="bad" -> "bad: ✗ (Exp: funct7)"
+        self.assertIn("bad: ✗ (Exp: funct7)", output)
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,7 +43,14 @@ def main():
             continue
 
         while True: # 2. Mode Selection Loop
+            # Calculate accuracy for display
+            p = engine.stats['points']
+            t = engine.stats['total_points']
+            acc = (p * 100 // t) if t > 0 else 0
+            
             print(f"\nMode Selection (Active Instruction Types: {', '.join(active_types)})")
+            print(f"Accuracy: {p}/{t} ({acc}%)")
+            print("-" * 20)
             print("1: Recall (Field names)")
             print("2: Bits (Field bit-widths)")
             print("3: Encoding (Full 32-bit practice)")
@@ -75,7 +82,7 @@ def main():
                     print("Type 'q' to return to the mode menu.\n")
                     
                     if mode == "1": # Recall
-                        print(f"Instruction: {ins.name.upper()} ({ins.type}-Type)")
+                        print(f"Instruction: {ins.name.lower()} ({ins.type}-Type)")
                         while True:
                             ans_raw = input("Fields in order (q to quit): ").strip()
                             if ans_raw.lower() in ['q', 'quit']: return_to_menu = True; break
@@ -95,12 +102,15 @@ def main():
                             print(f"Correct. ({points}/{total})")
                         else:
                             print(f"Incorrect. Points: {points}/{total}")
-                            feedback = [f"{name}: {'✓' if i < len(mask) and mask[i] else '✗'}" 
-                                       for i, name in enumerate(correct_list)]
+                            feedback = [f"{name}: {'✓' if i < len(mask) and mask[i] else f'✗ (Exp: {correct_list[i]})'}" 
+                                       for i, name in enumerate(ans)]
+                            # If answer was shorter, append missing expected fields
+                            if len(ans) < len(correct_list):
+                                feedback.extend([f"Missing (Exp: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
                             print(" | ".join(feedback))
                             
                     elif mode == "2": # Bits
-                        print(f"Instruction: {ins.name.upper()}")
+                        print(f"Instruction: {ins.name.lower()}")
                         while True:
                             ans_raw = input("Bit widths in order (space separated, q to quit): ").strip()
                             if ans_raw.lower() in ['q', 'quit']: return_to_menu = True; break
@@ -131,7 +141,10 @@ def main():
                     p = engine.stats['points']
                     t = engine.stats['total_points']
                     acc = (p * 100 // t) if t > 0 else 0
-                    print(f"\nGlobal Accuracy: {p}/{t} ({acc}%)")
+                    p = engine.stats['points']
+                    t = engine.stats['total_points']
+                    acc = (p * 100 // t) if t > 0 else 0
+                    print(f"\nAccuracy: {p}/{t} ({acc}%)")
                     
                     cont = input("\nContinue? [Y/n]: ").strip().lower()
                     if cont == 'n':
@@ -147,29 +160,33 @@ def run_encoding_pipeline(engine, q):
     
     def display_context():
         clear_screen()
-        print(f"Mode: Encoding (Instruction: {ins.name.upper()} - {ins.type}-Type)")
+        print(f"Mode: Encoding")
+        print("-" * 20)
+        print(f"\n{q['asm']}\n")
         print("-" * 20)
     
     def check_exit(text):
         return text.lower() in ['q', 'quit']
 
     # Step 1: Type
+    display_context()
     while True:
-        display_context()
-        raw = input("1. Identify Type (q to quit): ").strip()
+        print(f"What instruction type is `{ins.name.lower()}`?")
+        raw = input("Type (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
         if raw.upper() == ins.type: 
-            print("Correct.")
+            print("Correct. (1/1)")
             engine.record_stats(1, 1)
             break
-        print(f"Incorrect. Expected: {ins.type}")
+        print(f"Incorrect. (0/1) Expected: {ins.type}")
         engine.record_stats(0, 1)
 
     # Step 2: Fields
+    display_context()
     while True:
-        display_context()
-        raw = input("2. Enter Field Names (q to quit): ").strip()
+        print(f"What are the field names for instruction `{ins.name.lower()}` in order?")
+        raw = input("Fields (space separated, q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
         ans = raw.split()
@@ -177,20 +194,23 @@ def run_encoding_pipeline(engine, q):
         points = sum(mask)
         total = len(correct)
         engine.record_stats(points, total)
-        ok, mask, correct = engine.validate_layout(ans)
-        points = sum(mask)
-        total = len(correct)
-        engine.record_stats(points, total)
+        
         if ok: 
             print(f"Correct. ({points}/{total})")
             break
-        print(f"Incorrect. Expected: {' '.join(correct)}")
+        print(f"Incorrect. ({points}/{total})")
+        feedback = [f"{name}: {'✓' if i < len(mask) and mask[i] else f'✗ (Exp: {correct[i]})'}" 
+                       for i, name in enumerate(ans)]
+        # If answer was shorter, append missing expected fields
+        if len(ans) < len(correct):
+            feedback.extend([f"Missing (Exp: {correct[i]})" for i in range(len(ans), len(correct))])
+        print(" | ".join(feedback))
 
     # Step 3: Binary per field
+    display_context()
     while True:
-        display_context()
-        print(f"Values: rs1={q['rs1']}, rs2={q['rs2']}, rd={q['rd']}, imm={q['imm']}")
-        raw = input("3. Binary for each field (q to quit): ").strip()
+        print(f"What are the binary values for each field in `{ins.name.lower()}`?")
+        raw = input("Binary (space separated, q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
         ans = raw.split()
@@ -208,21 +228,27 @@ def run_encoding_pipeline(engine, q):
         if points == total and len(ans) == total:
             print(f"Correct. ({points}/{total})")
             break
-        print(f"Incorrect. Expected: {' '.join(truth_parts)}")
+        
+        print(f"Incorrect. ({points}/{total})")
+        field_names = [p[0] for p in truth["fields"]]
+        feedback = [f"{field_names[i]}: {'✓' if mask[i] else '✗ (Exp: ' + truth_parts[i] + ')'}" 
+                   for i in range(len(truth_parts))]
+        print(" | ".join(feedback))
 
     # Step 4: Final Hex
+    display_context()
     while True:
-        display_context()
-        raw = input("4. Full Hex (q to quit): ").strip()
+        print(f"What is the final 32-bit hex encoding for `{ins.name.lower()}`?")
+        raw = input("Hex (q to quit): ").strip()
         if not raw: continue
         if check_exit(raw): return False
-        h = raw.upper()
+        h = raw.lower()
         expected = truth["hex"]
-        if h == expected or h == "0X" + expected:
-            print("Correct!")
+        if h == expected or h == "0x" + expected:
+            print("Correct! (1/1)")
             engine.record_stats(1, 1)
             break
-        print(f"Incorrect. Expected: {expected}")
+        print(f"Incorrect. (0/1) Expected: {expected}")
         engine.record_stats(0, 1)
         
     return True
