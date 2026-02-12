@@ -27,27 +27,35 @@ The tutor supports six RISC-V instruction types: **R, I, S, B, U, J**.
 - **Visual Clarity**: Screen clears before every question to maintain "recall integrity".
 
 ### Example Sessions
-#### 1. Recall Mode (Demo of Partial Grading)
+#### 1. Recall Mode (2-Step Process)
 ```text
 Mode: Recall (Active Types: R, I)
 --------------------
-Instruction: ADD (R-Type)
+Instruction: add
+What instruction type is this? (q to quit): r
+Correct. (1/1) (Type: R)
+
+Instruction: add (R-Type)
 Fields in order (q to quit): funct7 rs2 rs1 funct3 rd op
 Incorrect. Points: 5/6
-funct7: ✓ | rs2: ✓ | rs1: ✓ | funct3: ✓ | rd: ✓ | opcode: ✗
+funct7: ✓ | rs2: ✓ | rs1: ✓ | funct3: ✓ | rd: ✓ | opcode: ✗ (Expected: opcode)
 
-Accuracy: 5/6 (83%)
+Accuracy: 6/7 (85%)
 ```
 
-#### 2. Bits Mode (Field Widths)
+#### 2. Bits Mode (2-Step Process)
 ```text
 Mode: Bits (Active Types: I)
 --------------------
-Instruction: LW
+Instruction: lw
+What instruction type is this? (q to quit): i
+Correct. (1/1) (Type: I)
+
+Instruction: lw (I-Type)
 Bit widths in order (space separated, q to quit): 12 5 3 5 7
 Correct. (5/5)
 
-Accuracy: 10/11 (90%)
+Accuracy: 6/6 (100%)
 ```
 
 #### 3. Encoding Mode

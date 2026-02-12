@@ -82,7 +82,37 @@ def main():
                     print("Type 'q' to return to the mode menu.\n")
                     
                     if mode == "1": # Recall
-                        print(f"Instruction: {ins.name.lower()} ({ins.type}-Type)")
+                        # Step 1: Instruction Type
+                        clear_screen()
+                        print(mode_header)
+                        print("-" * 20)
+                        print("Type 'q' to return to the mode menu.\n")
+                        print(f"Instruction: {ins.name.lower()}")
+                        
+                        step1_correct = False
+                        return_to_menu = False
+                        while True:
+                            ans_type = input("What instruction type is this? (q to quit): ").strip().upper()
+                            if ans_type.lower() in ['q', 'quit']: 
+                                return_to_menu = True
+                                break
+                            if not ans_type: continue
+                            
+                            if ans_type == ins.type:
+                                print(f"Correct. (1/1) (Type: {ins.type})")
+                                engine.record_stats(1, 1)
+                                step1_correct = True
+                                break
+                            else:
+                                print(f"Incorrect. (0/1) Expected: {ins.type}")
+                                engine.record_stats(0, 1)
+                                # Reveal type on failure too, to help recall
+                                break
+                        
+                        if return_to_menu: break
+
+                        # Step 2: Fields
+                        print(f"\nInstruction: {ins.name.lower()} ({ins.type}-Type)")
                         while True:
                             ans_raw = input("Fields in order (q to quit): ").strip()
                             if ans_raw.lower() in ['q', 'quit']: return_to_menu = True; break
@@ -106,17 +136,44 @@ def main():
                             for i, name in enumerate(ans):
                                 if i < len(correct_list):
                                     # mask has same length as correct_list
-                                    msg = "✓" if mask[i] else f"✗ (Exp: {correct_list[i]})"
+                                    msg = "✓" if mask[i] else f"✗ (Expected: {correct_list[i]})"
                                     feedback.append(f"{name}: {msg}")
                                 else:
                                     feedback.append(f"{name}: ✗ (Extra)")
                             # If answer was shorter, append missing expected fields
                             if len(ans) < len(correct_list):
-                                feedback.extend([f"Missing (Exp: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
+                                feedback.extend([f"Missing (Expected: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
                             print(" | ".join(feedback))
                             
                     elif mode == "2": # Bits
+                        # Step 1: Instruction Type
+                        clear_screen()
+                        print(mode_header)
+                        print("-" * 20)
+                        print("Type 'q' to return to the mode menu.\n")
                         print(f"Instruction: {ins.name.lower()}")
+                        
+                        return_to_menu = False
+                        while True:
+                            ans_type = input("What instruction type is this? (q to quit): ").strip().upper()
+                            if ans_type.lower() in ['q', 'quit']: 
+                                return_to_menu = True
+                                break
+                            if not ans_type: continue
+                            
+                            if ans_type == ins.type:
+                                print(f"Correct. (1/1) (Type: {ins.type})")
+                                engine.record_stats(1, 1)
+                                break
+                            else:
+                                print(f"Incorrect. (0/1) Expected: {ins.type}")
+                                engine.record_stats(0, 1)
+                                break
+                        
+                        if return_to_menu: break
+
+                        # Step 2: Bits
+                        print(f"\nInstruction: {ins.name.lower()} ({ins.type}-Type)")
                         while True:
                             ans_raw = input("Bit widths in order (space separated, q to quit): ").strip()
                             if ans_raw.lower() in ['q', 'quit']: return_to_menu = True; break
@@ -139,14 +196,14 @@ def main():
                             feedback = []
                             for i, val in enumerate(ans):
                                 if i < len(correct_list):
-                                    msg = "✓" if mask[i] else f"✗ (Exp: {correct_list[i]})"
+                                    msg = "✓" if mask[i] else f"✗ (Expected: {correct_list[i]})"
                                     feedback.append(msg)
                                 else:
                                     feedback.append("✗ (Extra)")
                             
                             # Append missing expected fields if any
                             if len(ans) < len(correct_list):
-                                feedback.extend([f"✗ (Exp: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
+                                feedback.extend([f"✗ (Expected: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
                             
                             print(" ".join(feedback))
                             
@@ -229,13 +286,13 @@ def run_encoding_pipeline(engine, q):
         for i, name in enumerate(ans):
             if i < len(correct):
                 # mask matches correct length
-                msg = "✓" if mask[i] else f"✗ (Exp: {correct[i]})"
+                msg = "✓" if mask[i] else f"✗ (Expected: {correct[i]})"
                 feedback.append(f"{name}: {msg}")
             else:
                 feedback.append(f"{name}: ✗ (Extra)")
         # If answer was shorter, append missing expected fields
         if len(ans) < len(correct):
-            feedback.extend([f"Missing (Exp: {correct[i]})" for i in range(len(ans), len(correct))])
+            feedback.extend([f"Missing (Expected: {correct[i]})" for i in range(len(ans), len(correct))])
         print(" | ".join(feedback))
 
     # Step 3: Binary per field
@@ -266,14 +323,14 @@ def run_encoding_pipeline(engine, q):
         feedback = []
         for i, val in enumerate(ans):
             if i < len(truth_parts):
-                msg = "✓" if mask[i] else f"✗ (Exp: {truth_parts[i]})"
+                msg = "✓" if mask[i] else f"✗ (Expected: {truth_parts[i]})"
                 feedback.append(f"{field_names[i]}: {msg}")
             else:
                 feedback.append(f"✗ (Extra)")
         
         # Append missing
         if len(ans) < len(truth_parts):
-             feedback.extend([f"{field_names[i]}: ✗ (Exp: {truth_parts[i]})" for i in range(len(ans), len(truth_parts))])
+             feedback.extend([f"{field_names[i]}: ✗ (Expected: {truth_parts[i]})" for i in range(len(ans), len(truth_parts))])
 
         print(" | ".join(feedback))
 

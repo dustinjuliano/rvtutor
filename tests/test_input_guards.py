@@ -15,7 +15,8 @@ class TestInputGuards(unittest.TestCase):
         """Mode 1 (Recall): Verify extra fields are handled gracefully."""
         # Instruction: add (R-Type) -> funct7 rs2 rs1 funct3 rd opcode (6 fields)
         # Input: 7 fields (1 extra)
-        mock_input.side_effect = ["R", "1", "funct7 rs2 rs1 funct3 rd opcode extra", "n", "q"]
+        # Flow: Types (R), Mode (1), Step 1 Type (R), Step 2 Fields (R + extra), Continue (n), Quit
+        mock_input.side_effect = ["R", "1", "R", "funct7 rs2 rs1 funct3 rd opcode extra", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("add", "R", 0x33, 0x0, 0x0)
@@ -37,7 +38,8 @@ class TestInputGuards(unittest.TestCase):
         """Mode 2 (Bits): Verify extra fields are handled gracefully."""
         # Instruction: addi (I-Type) -> 12 5 3 5 7 (5 fields)
         # Input: 6 fields (1 extra)
-        mock_input.side_effect = ["I", "2", "12 5 3 5 7 99", "n", "q"]
+        # Flow: Types (I), Mode (2), Step 1 Type (I), Step 2 Bits (Extra), Continue (n), Quit
+        mock_input.side_effect = ["I", "2", "I", "12 5 3 5 7 99", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("addi", "I", 0x13, 0x0)

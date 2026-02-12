@@ -10,9 +10,12 @@ class TestMain(unittest.TestCase):
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_recall_flow(self, mock_stdout, mock_input):
-        # Flow: Types (ALL), Mode (1), Answer, Continue (n), Types Exit (q)
+        # Flow: Types (ALL), Mode (1), 
+        # Step 1: Type (R), 
+        # Step 2: Fields (funct7 rs2 rs1 funct3 rd opcode), 
+        # Continue (n), Types Exit (q)
         # Note: Enter for ALL = ""
-        mock_input.side_effect = ["", "1", "funct7 rs2 rs1 funct3 rd opcode", "n", "q"]
+        mock_input.side_effect = ["", "1", "R", "funct7 rs2 rs1 funct3 rd opcode", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("add", "R", 0x33, 0x0, 0x0)
@@ -23,13 +26,14 @@ class TestMain(unittest.TestCase):
             
             output = mock_stdout.getvalue()
             self.assertIn("Welcome to rvtutor", output)
-            self.assertIn("Correct.", output)
+            self.assertIn("Correct. (1/1) (Type: R)", output) # Step 1 verification
+            self.assertIn("Correct.", output) # Step 2 verification
 
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_bits_flow(self, mock_stdout, mock_input):
-        # Flow: Types (I), Mode (2), Answer, Continue (n), Types Exit (q)
-        mock_input.side_effect = ["I", "2", "12 5 3 5 7", "n", "q"]
+        # Flow: Types (I), Mode (2), Step 1: Type (I), Step 2: Bits (12 5 3 5 7), Continue (n), Types Exit (q)
+        mock_input.side_effect = ["I", "2", "I", "12 5 3 5 7", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("addi", "I", 0x13, 0x0)
@@ -39,13 +43,14 @@ class TestMain(unittest.TestCase):
                 main()
             
             output = mock_stdout.getvalue()
+            self.assertIn("Correct. (1/1) (Type: I)", output)
             self.assertIn("Correct.", output)
 
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_bits_invalid_then_q(self, mock_stdout, mock_input):
-        # Flow: Types (I), Mode (2), Empty (repeat), Bad Answer, Continue (n), Types Exit (q)
-        mock_input.side_effect = ["I", "2", "", "not numbers", "n", "q"]
+        # Flow: Types (I), Mode (2), Step 1: Type (I), Step 2: Empty (repeat), Bad Answer, Continue (n), Types Exit (q)
+        mock_input.side_effect = ["I", "2", "I", "", "not numbers", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("addi", "I", 0x13, 0x0)
@@ -56,6 +61,7 @@ class TestMain(unittest.TestCase):
             
             output = mock_stdout.getvalue()
             self.assertIn("Incorrect.", output)
+            self.assertIn("Expected:", output)
 
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -80,8 +86,10 @@ class TestMain(unittest.TestCase):
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_multi_question_stats(self, mock_stdout, mock_input):
-        # Flow: Types (ALL), Mode (2), Ans1 (OK), Continue (y), Ans2 (Fail), Continue (n), Quit
-        mock_input.side_effect = ["all", "2", "12 5 3 5 7", "y", "0 0 0 0 0", "n", "q"]
+        # Flow: Types (ALL), Mode (2), 
+        # Q1: Type (I), Bits (OK), Continue (y)
+        # Q2: Type (I), Bits (Fail), Continue (n), Quit
+        mock_input.side_effect = ["all", "2", "I", "12 5 3 5 7", "y", "I", "0 0 0 0 0", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("addi", "I", 0x13, 0x0)
@@ -91,14 +99,16 @@ class TestMain(unittest.TestCase):
                 main()
             
             output = mock_stdout.getvalue()
-            # Accuracy check: 5/5 from first, 0/5 from second = 5/10 (50%)
-            self.assertIn("Accuracy: 5/10 (50%)", output)
+            # Accuracy check: 1/1+5/5 from first, 1/1+0/5 from second = 7/12 (58%)
+            # Wait, points: 1+5 + 1+0 = 7. Total: 1+5 + 1+5 = 12.
+            # 7/12 = 58.33% -> 58%
+            self.assertIn("Accuracy: 7/12 (58%)", output)
 
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_case_insensitivity(self, mock_stdout, mock_input):
-        # Flow: Types (r,i), Mode (1), Mixed-Case Answer, Continue (n), Types Exit (q)
-        mock_input.side_effect = ["R,i", "1", "FUNCT7 rs2 RS1 funct3 rd OPCODE", "n", "q"]
+        # Flow: Types (r,i), Mode (1), Answer Type (r), Mixed-Case Fields, Continue (n), Types Exit (q)
+        mock_input.side_effect = ["R,i", "1", "r", "FUNCT7 rs2 RS1 funct3 rd OPCODE", "n", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("add", "R", 0x33, 0x0, 0x0)
@@ -113,8 +123,8 @@ class TestMain(unittest.TestCase):
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_mode_switch(self, mock_stdout, mock_input):
-        # Flow: Types (all), Mode (1), Ans, Continue (n) -> Mode (2), Ans, Continue (n) -> Mode Exit (q) -> Types Exit (q)
-        mock_input.side_effect = ["all", "1", "funct7 rs2 rs1 funct3 rd opcode", "n", "2", "12 5 3 5 7", "n", "q", "q"]
+        # Flow: Types (all), Mode (1), Type(R), Fields(OK), Continue (n) -> Mode (2), Type(I), Bits(OK), Continue (n) -> Mode Exit (q) -> Types Exit (q)
+        mock_input.side_effect = ["all", "1", "R", "funct7 rs2 rs1 funct3 rd opcode", "n", "2", "I", "12 5 3 5 7", "n", "q", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins_r = Instruction("add", "R", 0x33, 0x0, 0x0)
@@ -244,15 +254,36 @@ class TestMain(unittest.TestCase):
         self.assertEqual(output.count("Mode: Encoding"), 3)
         
         # Also verify the feedback text is present
-        # With extended partial grading, "bad input" maps to field[0]="bad" -> "bad: ✗ (Exp: funct7)"
-        self.assertIn("bad: ✗ (Exp: funct7)", output)
+        # With extended partial grading, "bad input" maps to field[0]="bad" -> "bad: ✗ (Expected: funct7)"
+        self.assertIn("bad: ✗ (Expected: funct7)", output)
 
     @patch('builtins.input')
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_recall_extra_fields(self, mock_stdout, mock_input):
         # User enters more fields than expected for sw (S-type)
         # S-Type has 6 fields. User enters 7.
-        mock_input.side_effect = ["S", "1", "imm rs2 rs1 funct3 rs imm opcode", "n", "q"]
+        # Flow:
+        # 1. Types (S)
+        # 2. Mode (1)
+        # 3. Step 1 (Type): S
+        # 4. Step 2 (Fields): imm rs2 rs1 funct3 rs imm opcode (Extra)
+        # 5. Continue? (n)
+        # 6. Types: (q) -- wait, main loop breaks on 'n', so it goes back to Types input
+        
+        # main() structure:
+        # while True (Types):
+        #   input Types -> "S"
+        #   while True (Mode):
+        #     input Mode -> "1"
+        #     while True (Quiz):
+        #       Step 1: input Type -> "S"
+        #       Step 2: input Fields -> "..."
+        #       input Continue? -> "n" (breaks Quiz loop)
+        #     (back in Mode loop)
+        #     input Mode -> "q" (exit sys)
+        
+        # So inputs should be: "S", "1", "S", "fields...", "n", "q"
+        mock_input.side_effect = ["S", "1", "S", "imm rs2 rs1 funct3 rs imm opcode", "n", "q", "q", "q"]
         
         with patch('engine.random.choice') as mock_choice:
             ins = Instruction("sw", "S", 0x23, 0x2)
