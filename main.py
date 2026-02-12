@@ -174,19 +174,20 @@ def run_encoding_pipeline(engine, q):
     ins = q["instruction"]
     truth = engine.get_ground_truth()
     
-    def display_context():
+    def display_context(show_givens=False):
         clear_screen()
         print(f"Mode: Encoding")
         print("-" * 20)
         print(f"\n{q['asm']}\n")
         
-        print("Givens:")
-        print(f"  Opcode: {ins.op}")
-        if ins.f3 is not None:
-            print(f"  Funct3: {ins.f3}")
-        if ins.f7 is not None:
-            print(f"  Funct7: {ins.f7}")
-        print()
+        if show_givens:
+            print("Givens:")
+            print(f"  Opcode: {ins.op}")
+            if ins.f3 is not None:
+                print(f"  Funct3: {ins.f3}")
+            if ins.f7 is not None:
+                print(f"  Funct7: {ins.f7}")
+            print()
 
         print("-" * 20)
     
@@ -194,7 +195,7 @@ def run_encoding_pipeline(engine, q):
         return text.lower() in ['q', 'quit']
 
     # Step 1: Type
-    display_context()
+    display_context(show_givens=False)
     while True:
         print(f"What instruction type is `{ins.name.lower()}`?")
         raw = input("Type (q to quit): ").strip()
@@ -208,7 +209,7 @@ def run_encoding_pipeline(engine, q):
         engine.record_stats(0, 1)
 
     # Step 2: Fields
-    display_context()
+    display_context(show_givens=False)
     while True:
         print(f"What are the field names for instruction `{ins.name.lower()}` in order?")
         raw = input("Fields (space separated, q to quit): ").strip()
@@ -238,7 +239,7 @@ def run_encoding_pipeline(engine, q):
         print(" | ".join(feedback))
 
     # Step 3: Binary per field
-    display_context()
+    display_context(show_givens=True)
     while True:
         print(f"What are the binary values for each field in `{ins.name.lower()}`?")
         raw = input("Binary (space separated, q to quit): ").strip()
@@ -277,7 +278,7 @@ def run_encoding_pipeline(engine, q):
         print(" | ".join(feedback))
 
     # Step 4: Final Hex
-    display_context()
+    display_context(show_givens=True)
     while True:
         print(f"What is the final 32-bit hex encoding for `{ins.name.lower()}`?")
         raw = input("Hex (q to quit): ").strip()

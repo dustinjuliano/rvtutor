@@ -57,11 +57,6 @@ Mode: Encoding
 
 sub x3, x1, x2
 
-Givens:
-  Opcode: 51
-  Funct3: 0
-  Funct7: 32
-
 --------------------
 What instruction type is `sub`?
 Type (q to quit): R
@@ -70,6 +65,11 @@ Correct. (1/1)
 What are the field names for instruction `sub` in order?
 Fields (space separated, q to quit): funct7 rs2 rs1 funct3 rd opcode
 Correct. (6/6)
+
+Givens:
+  Opcode: 51
+  Funct3: 0
+  Funct7: 32
 
 What are the binary values for each field in `sub`?
 Binary (space separated, q to quit): 0100000 00010 00001 000 00011 0110011
