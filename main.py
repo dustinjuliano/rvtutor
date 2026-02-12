@@ -102,8 +102,14 @@ def main():
                             print(f"Correct. ({points}/{total})")
                         else:
                             print(f"Incorrect. Points: {points}/{total}")
-                            feedback = [f"{name}: {'✓' if i < len(mask) and mask[i] else f'✗ (Exp: {correct_list[i]})'}" 
-                                       for i, name in enumerate(ans)]
+                            feedback = []
+                            for i, name in enumerate(ans):
+                                if i < len(correct_list):
+                                    # mask has same length as correct_list
+                                    msg = "✓" if mask[i] else f"✗ (Exp: {correct_list[i]})"
+                                    feedback.append(f"{name}: {msg}")
+                                else:
+                                    feedback.append(f"{name}: ✗ (Extra)")
                             # If answer was shorter, append missing expected fields
                             if len(ans) < len(correct_list):
                                 feedback.extend([f"Missing (Exp: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
@@ -130,8 +136,18 @@ def main():
                             print(f"Correct. ({points}/{total})")
                         else:
                             print(f"Incorrect. Points: {points}/{total}")
-                            feedback = ["✓" if i < len(mask) and mask[i] else f"✗ (Exp: {bits})" 
-                                       for i, bits in enumerate(correct_list)]
+                            feedback = []
+                            for i, val in enumerate(ans):
+                                if i < len(correct_list):
+                                    msg = "✓" if mask[i] else f"✗ (Exp: {correct_list[i]})"
+                                    feedback.append(msg)
+                                else:
+                                    feedback.append("✗ (Extra)")
+                            
+                            # Append missing expected fields if any
+                            if len(ans) < len(correct_list):
+                                feedback.extend([f"✗ (Exp: {correct_list[i]})" for i in range(len(ans), len(correct_list))])
+                            
                             print(" ".join(feedback))
                             
                     elif mode == "3": # Encoding
@@ -199,8 +215,14 @@ def run_encoding_pipeline(engine, q):
             print(f"Correct. ({points}/{total})")
             break
         print(f"Incorrect. ({points}/{total})")
-        feedback = [f"{name}: {'✓' if i < len(mask) and mask[i] else f'✗ (Exp: {correct[i]})'}" 
-                       for i, name in enumerate(ans)]
+        feedback = []
+        for i, name in enumerate(ans):
+            if i < len(correct):
+                # mask matches correct length
+                msg = "✓" if mask[i] else f"✗ (Exp: {correct[i]})"
+                feedback.append(f"{name}: {msg}")
+            else:
+                feedback.append(f"{name}: ✗ (Extra)")
         # If answer was shorter, append missing expected fields
         if len(ans) < len(correct):
             feedback.extend([f"Missing (Exp: {correct[i]})" for i in range(len(ans), len(correct))])
@@ -231,8 +253,18 @@ def run_encoding_pipeline(engine, q):
         
         print(f"Incorrect. ({points}/{total})")
         field_names = [p[0] for p in truth["fields"]]
-        feedback = [f"{field_names[i]}: {'✓' if mask[i] else '✗ (Exp: ' + truth_parts[i] + ')'}" 
-                   for i in range(len(truth_parts))]
+        feedback = []
+        for i, val in enumerate(ans):
+            if i < len(truth_parts):
+                msg = "✓" if mask[i] else f"✗ (Exp: {truth_parts[i]})"
+                feedback.append(f"{field_names[i]}: {msg}")
+            else:
+                feedback.append(f"✗ (Extra)")
+        
+        # Append missing
+        if len(ans) < len(truth_parts):
+             feedback.extend([f"{field_names[i]}: ✗ (Exp: {truth_parts[i]})" for i in range(len(ans), len(truth_parts))])
+
         print(" | ".join(feedback))
 
     # Step 4: Final Hex

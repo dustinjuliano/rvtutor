@@ -247,5 +247,32 @@ class TestMain(unittest.TestCase):
         # With extended partial grading, "bad input" maps to field[0]="bad" -> "bad: ✗ (Exp: funct7)"
         self.assertIn("bad: ✗ (Exp: funct7)", output)
 
+    @patch('builtins.input')
+    @patch('sys.stdout', new_callable=io.StringIO)
+    def test_recall_extra_fields(self, mock_stdout, mock_input):
+        # User enters more fields than expected for sw (S-type)
+        # S-Type has 6 fields. User enters 7.
+        mock_input.side_effect = ["S", "1", "imm rs2 rs1 funct3 rs imm opcode", "n", "q"]
+        
+        with patch('engine.random.choice') as mock_choice:
+            ins = Instruction("sw", "S", 0x23, 0x2)
+            mock_choice.return_value = ins
+            
+            with self.assertRaises(SystemExit):
+                main()
+            
+            output = mock_stdout.getvalue()
+            # Verify no crash and expected error message for extra field
+            # The 5th item (index 4) 'rs' is extra relative to standard S-type?
+            # Wait, S-type: imm(0), rs2(1), rs1(2), funct3(3), imm(4), opcode(5).
+            # User Input: imm(0), rs2(1), rs1(2), funct3(3), rs(4), imm(5), opcode(6).
+            # index 4 is 'rs'. expected 'imm'.
+            # index 5 is 'imm'. expected 'opcode'.
+            # index 6 is 'opcode'. Unexpected (Extra).
+            
+            # The code prints "✗ (Extra)" for i >= len(correct_list) aka i >= 6.
+            # So 'opcode' (index 6) should be marked as Extra.
+            self.assertIn("opcode: ✗ (Extra)", output)
+
 if __name__ == '__main__':
     unittest.main()
