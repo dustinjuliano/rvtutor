@@ -52,22 +52,30 @@ Accuracy: 10/11 (90%)
 
 #### 3. Encoding Mode
 ```text
-Mode: Encoding (Instruction: SUB)
-Assembly: SUB x3, x1, x2
+Mode: Encoding
 --------------------
-What instruction type is `SUB`?
+
+sub x3, x1, x2
+
+Givens:
+  Opcode: 51
+  Funct3: 0
+  Funct7: 32
+
+--------------------
+What instruction type is `sub`?
 Type (q to quit): R
 Correct. (1/1)
 
-What are the field names for instruction `SUB` in order?
+What are the field names for instruction `sub` in order?
 Fields (space separated, q to quit): funct7 rs2 rs1 funct3 rd opcode
 Correct. (6/6)
 
-What are the binary values for each field in `SUB`?
+What are the binary values for each field in `sub`?
 Binary (space separated, q to quit): 0100000 00010 00001 000 00011 0110011
 Correct. (6/6)
 
-What is the final 32-bit hex encoding for `SUB`?
+What is the final 32-bit hex encoding for `sub`?
 Hex (q to quit): 402081B3
 Correct! (1/1)
 ```

@@ -179,6 +179,15 @@ def run_encoding_pipeline(engine, q):
         print(f"Mode: Encoding")
         print("-" * 20)
         print(f"\n{q['asm']}\n")
+        
+        print("Givens:")
+        print(f"  Opcode: {ins.op}")
+        if ins.f3 is not None:
+            print(f"  Funct3: {ins.f3}")
+        if ins.f7 is not None:
+            print(f"  Funct7: {ins.f7}")
+        print()
+
         print("-" * 20)
     
     def check_exit(text):
