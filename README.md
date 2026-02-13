@@ -23,6 +23,12 @@ The tutor supports six RISC-V instruction types: **R, I, S, B, U, J**.
   2. Identify Field Names
   3. Convert Assembly to Binary Fields
   4. Final 32-bit Hex Synthesis
+- **Decoding Mode**: Convert 32-bit hex back to assembly in a 7-step scaffolded process:
+  1. Hex to Binary
+  2. Opcode & Type
+  3. Field Names
+  4. Field Values
+  5. Assembly Construction (with strict validation)
 - **Partial Credit**: Get granular feedback on which specific fields you got right with expected values shown on failure.
 - **Visual Clarity**: Screen clears before every question to maintain "recall integrity".
 
@@ -111,6 +117,14 @@ Grading is split across the 4-step pipeline:
 2. **Field Names**: Points equal to the number of fields in that instruction's layout (e.g., 6 points for R-type).
 3. **Binary Fields**: Points equal to the number of fields; requires exact binary string matching for each component (e.g., `rs1`, `rs2`, `imm`, etc.).
 4. **Hex Synthesis**: 1 point for the final 32-bit hex value (0x-prefixed or raw).
+
+### Decoding Mode
+1. **Hex to Binary**: 1 point.
+2. **Opcode**: 1 point for decimal opcode.
+3. **Type**: 1 point for correct type (R/I/S/B/U/J).
+4. **Field Names**: 1 point for listing correct field names (LSB to MSB).
+5. **Field Values**: Points equal to number of fields.
+6. **Assembly**: 1 point for strict syntax match.
 
 ## How to Use It
 ### Prerequisites

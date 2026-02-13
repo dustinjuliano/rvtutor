@@ -20,7 +20,7 @@ class TestEngine(unittest.TestCase):
     def test_filter_pool_all_literal(self):
         # Test the list with 'all' inside (though main.py handles it, engine should be robust)
         self.engine.filter_pool(['R', 'I', 'S', 'B', 'U', 'J'])
-        self.assertEqual(len(self.engine.pool), 9)
+        self.assertEqual(len(self.engine.pool), 10)
 
     def test_filter_pool_redundant(self):
         self.engine.filter_pool(['R', 'R', 'R'])
@@ -123,7 +123,7 @@ class TestEngine(unittest.TestCase):
             self.engine.validate_layout("string")
 
     def test_validation_bits(self):
-        self.engine.filter_pool(['U']) # imm(20), rd(5), op(7)
+        self.engine.filter_pool(['U']) # imm[31:12](20), rd(5), op(7)
         self.engine.generate_question()
         ok, mask, correct = self.engine.validate_bits([20, 5, 7])
         self.assertTrue(ok)

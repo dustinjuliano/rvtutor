@@ -68,10 +68,8 @@ class TestRISCV(unittest.TestCase):
         self.assertEqual(res, ["1", "1111111111", "1", "11111111"])
 
     def test_swizzler_u_boundaries(self):
-        # U-type is just 20 bits
-        self.assertEqual(Swizzler.j_type(0), ["0", "0000000000", "0", "00000000"]) # Wait, j_type test
-        # Let's just add a simple registry sanity check
-        self.assertEqual(len(REGISTRY), 9)
+        # UI/AUIPC
+        self.assertEqual(len(REGISTRY), 10)
 
     def test_swizzler_s_negatives(self):
         # imm = -1 (0xFFF)

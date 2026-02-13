@@ -64,11 +64,11 @@ class Swizzler:
 
 LAYOUTS = {
     'R': [('funct7', 7), ('rs2', 5), ('rs1', 5), ('funct3', 3), ('rd', 5), ('opcode', 7)],
-    'I': [('imm', 12), ('rs1', 5), ('funct3', 3), ('rd', 5), ('opcode', 7)],
-    'S': [('imm', 7), ('rs2', 5), ('rs1', 5), ('funct3', 3), ('imm', 5), ('opcode', 7)],
-    'B': [('imm', 1), ('imm', 6), ('rs2', 5), ('rs1', 5), ('funct3', 3), ('imm', 4), ('imm', 1), ('opcode', 7)],
-    'U': [('imm', 20), ('rd', 5), ('opcode', 7)],
-    'J': [('imm', 1), ('imm', 10), ('imm', 1), ('imm', 8), ('rd', 5), ('opcode', 7)],
+    'I': [('imm[11:0]', 12), ('rs1', 5), ('funct3', 3), ('rd', 5), ('opcode', 7)],
+    'S': [('imm[11:5]', 7), ('rs2', 5), ('rs1', 5), ('funct3', 3), ('imm[4:0]', 5), ('opcode', 7)],
+    'B': [('imm[12]', 1), ('imm[10:5]', 6), ('rs2', 5), ('rs1', 5), ('funct3', 3), ('imm[4:1]', 4), ('imm[11]', 1), ('opcode', 7)],
+    'U': [('imm[31:12]', 20), ('rd', 5), ('opcode', 7)],
+    'J': [('imm[20]', 1), ('imm[10:1]', 10), ('imm[11]', 1), ('imm[19:12]', 8), ('rd', 5), ('opcode', 7)],
 }
 
 REGISTRY = [
@@ -80,5 +80,6 @@ REGISTRY = [
     Instruction("sw",   "S", 0x23, 0x2),
     Instruction("beq",  "B", 0x63, 0x0),
     Instruction("lui",  "U", 0x37),
+    Instruction("auipc","U", 0x17),
     Instruction("jal",  "J", 0x6F),
 ]

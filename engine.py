@@ -93,44 +93,55 @@ class QuizEngine:
         if ins.f3 is not None: fields["funct3"] = to_bin(ins.f3, 3)
         if ins.f7 is not None: fields["funct7"] = to_bin(ins.f7, 7)
         
+        layout_names = [f[0] for f in LAYOUTS[ins.type]]
+        
         # Dynamic register fields
-        if "rs1" in [f[0] for f in LAYOUTS[ins.type]]: fields["rs1"] = to_bin(q["rs1"], 5)
-        if "rs2" in [f[0] for f in LAYOUTS[ins.type]]: fields["rs2"] = to_bin(q["rs2"], 5)
-        if "rd" in [f[0] for f in LAYOUTS[ins.type]]: fields["rd"] = to_bin(q["rd"], 5)
+        if "rs1" in layout_names: fields["rs1"] = to_bin(q["rs1"], 5)
+        if "rs2" in layout_names: fields["rs2"] = to_bin(q["rs2"], 5)
+        if "rd" in layout_names: fields["rd"] = to_bin(q["rd"], 5)
         
-        # Immediate swizzling
-        imm_val = q["imm"]
-        imm_parts = []
-        if ins.type == 'I': 
-            imm_parts = [to_bin(imm_val, 12)]
-        elif ins.type == 'S': 
-            imm_parts = Swizzler.s_type(imm_val)
-        elif ins.type == 'B': 
-            imm_parts = Swizzler.b_type(imm_val)
-        elif ins.type == 'U': 
-            imm_parts = [to_bin(imm_val, 20)]
-        elif ins.type == 'J': 
-            imm_parts = Swizzler.j_type(imm_val)
+        full_bin_str = ""
+        result_fields = []
+        import re
+        
+        for name, length in LAYOUTS[ins.type]:
+            val_bin = ""
             
-        # Compile full binary
-        layout = LAYOUTS[ins.type]
-        binary_str = ""
-        imm_ptr = 0
-        ordered_fields = []
-        
-        for name, bits in layout:
-            if name == 'imm':
-                val = imm_parts[imm_ptr]
-                imm_ptr += 1
+            if name in fields:
+                val_bin = fields[name]
+            elif name.startswith("imm"):
+                full_imm = q['imm']
+                
+                range_match = re.search(r"\[(\d+):(\d+)\]", name)
+                bit_match = re.search(r"\[(\d+)\]", name)
+                
+                if ins.type == 'U':
+                    # U-type immediate provided is the field value itself (20 bits)
+                    # It corresponds to bits 31:12 of the final value, but q['imm'] IS that value.
+                    val = full_imm & ((1<<length)-1)
+                elif range_match:
+                    hi = int(range_match.group(1))
+                    lo = int(range_match.group(2))
+                    val = (full_imm >> lo) & ((1 << (hi - lo + 1)) - 1)
+                elif bit_match:
+                    bit = int(bit_match.group(1))
+                    val = (full_imm >> bit) & 1
+                else:
+                    # Fallback for unsplit immediates (e.g. if any)
+                    val = full_imm & ((1<<length)-1)
+                    
+                val_bin = to_bin(val, length)
             else:
-                val = fields[name]
-            binary_str += val
-            ordered_fields.append((name, val))
+                 # Should not happen, but safety fallback
+                 val_bin = to_bin(0, length)
+            
+            full_bin_str += val_bin
+            result_fields.append((name, val_bin))
             
         return {
-            "binary": binary_str,
-            "hex": to_hex(int(binary_str, 2)),
-            "fields": ordered_fields
+            "binary": full_bin_str,
+            "hex": to_hex(int(full_bin_str, 2)),
+            "fields": result_fields
         }
 
     def validate_layout(self, user_input: List[str]) -> Tuple[bool, List[bool], List[str]]:
